@@ -12,8 +12,6 @@ app.use((req,res) =>{
     // res.send("This is the loadbalancer server")
     const key = req.path 
     const serverId = getServerId(key)
-
-
 })
 
 app.listen(8000, () =>{
