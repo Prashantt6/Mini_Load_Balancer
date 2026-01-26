@@ -8,6 +8,4 @@ app.get("*",(req,res) =>{
     res.send("Request handled by server 1")
 })
 
-app.listen(PORT, () =>{
-    console.log("Server is running at port 3002")
-})
+app.listen(PORT) //PORT = 3002
