@@ -64,7 +64,7 @@ This approach ensures efficient request distribution while minimizing remapping 
     npm install 
     ```
 3. Run the program:
-    ``bash 
+    ```bash 
     npm start
     ```
 ---
