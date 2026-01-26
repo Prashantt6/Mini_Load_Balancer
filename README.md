@@ -7,7 +7,7 @@ The load balancer works by hashing all backend servers and placing them on a **h
 Each incoming client request is also hashed and routed to the **next clockwise server** on the ring, ensuring efficient and stable request distribution even when servers are added or removed.
 
 This project focuses on learning how real-world load balancers minimize re-routing, maintain scalability, and handle distributed systems effectively.
----
+
 ## How It Works
 
 1. All backend servers are first **hashed and placed on a consistent hash ring** when the load balancer starts.
@@ -23,7 +23,7 @@ This project focuses on learning how real-world load balancers minimize re-routi
 6. The backend server processes the request and sends the response back through the load balancer to the client.
 
 This approach ensures efficient request distribution while minimizing remapping when servers are added or removed.
----
+
 ## Project Structure
 
 ```text
