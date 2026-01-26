@@ -2,16 +2,23 @@
   "name": "miniloadbalancer",
   "version": "1.0.0",
   "scripts": {
-    "dev": "ts-node src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "lb": "ts-node loadbalancer/loadBalancerServer.ts",
+    "s1": "ts-node src/servers/server1.ts",
+    "s2": "ts-node src/servers/server2.ts",
+    "s3": "ts-node src/servers/server3.ts",
+    "start": "concurrently \"npm run lb\" \"npm run s1\" \"npm run s2\" \"npm run s3\""
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/http-proxy": "^1.17.17",
     "@types/node": "^25.0.10",
+    "concurrently": "^9.2.1",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "http-proxy": "^1.18.1"
   }
 }
