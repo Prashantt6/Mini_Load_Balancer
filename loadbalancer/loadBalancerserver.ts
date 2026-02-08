@@ -1,5 +1,6 @@
 import httpProxy from 'http-proxy'
 import express from 'express'
+import axios from 'axios'
 import { getServerId } from './lb-algorithm/consistentHashing'
 import { addServerId } from './lb-algorithm/consistentHashing'
 
@@ -12,7 +13,7 @@ const serverMap: Record<string, string> ={
     "server-2": "http://localhost:3002",
     "server-3": "http://localhost:3003"
 }
-
+const serverHealth: Record<string, boolean> ={}
 app.use(express.json())
 
 function addServer() {
@@ -33,3 +34,29 @@ app.use((req,res) =>{
 })
 
 app.listen(8000);
+
+// Handling Failure of servers
+for (const serverId in serverMap){
+    serverHealth[serverId] = false
+}
+
+const runhealthCheckup= async() =>{
+    for(const[serverId, serverUrl] of Object.entries(serverMap)){
+        const health = await checkHealth(serverUrl)
+        serverHealth[serverId] = health
+    }
+}
+
+setInterval(runhealthCheckup, 10000)
+ 
+async function checkHealth(serverUrl:string): Promise<boolean> {
+    try {
+        const res = await axios.get(`${serverUrl}/health`,{
+            timeout: 2000
+        })
+        return res.status === 200 
+    }
+    catch {
+        return false
+    }
+}
