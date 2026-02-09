@@ -30,6 +30,10 @@ app.use((req,res) =>{
     const serverId = getServerId(key)
     console.log("Routing to:", serverId, serverMap[serverId]);
 
+    if (!serverHealth[serverId]) {
+        return res.status(503).send('Service unavailable')
+    }
+
     proxy.web(req, res, {
         target: serverMap[serverId]
     })
@@ -37,20 +41,21 @@ app.use((req,res) =>{
 
 app.listen(8000);
 
-// Handling Failure of servers
-for (const serverId in serverMap){
-    serverHealth[serverId] = false
-}
-
 
 const runhealthCheckup= async() =>{
     for(const[serverId, serverUrl] of Object.entries(serverMap)){
         const health = await checkHealth(serverUrl)
         serverHealth[serverId] = health
-        console.log(`Server checkup done for this ${serverId} and response is ${serverHealth[serverId]}`)
         if(serverHealth[serverId] == false){
             failCount(serverId)
+            handlingFailedServer()
         }
+        else{
+            failureCount[serverId] = 0
+        }
+        console.log(
+          `Health: ${serverId} = ${health}, failures = ${failureCount[serverId]}`
+        )
     }
 }
 
@@ -78,11 +83,13 @@ function failCount(serverId:string){
         failureCount[serverId] = 1
     }
 }
-function handlingFailedServer(serverId:string){
+function handlingFailedServer(){
     for(const[serverId, count] of Object.entries(failureCount)){
-        if (count == 5){
+        if (count >= 5){
+            console.log(`Removing ${serverId} due to repeated failures`)
             removeServerId(serverId)
+            delete failureCount[serverId]
+            delete serverHealth[serverId]
         }
     }
 }
-setInterval(handlingFailedServer,10000)

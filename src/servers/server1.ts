@@ -8,6 +8,6 @@ app.use((req ,res) =>{
     res.send("Request handled by server 1")
 })
 app.get("/health",(req,res)=>{
-    return res.statusCode = 200
+    res.status(200).send("OK")
 })
 app.listen(PORT) //PORT = 3001
