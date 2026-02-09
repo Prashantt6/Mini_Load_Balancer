@@ -3,6 +3,7 @@ import express from 'express'
 import axios from 'axios'
 import { getServerId } from './lb-algorithm/consistentHashing'
 import { addServerId } from './lb-algorithm/consistentHashing'
+import { removeServerId } from './lb-algorithm/consistentHashing'
 
 
 const app = express()
@@ -14,6 +15,7 @@ const serverMap: Record<string, string> ={
     "server-3": "http://localhost:3003"
 }
 const serverHealth: Record<string, boolean> ={}
+const failureCount: Record<string, number> = {}
 app.use(express.json())
 
 function addServer() {
@@ -40,10 +42,15 @@ for (const serverId in serverMap){
     serverHealth[serverId] = false
 }
 
+
 const runhealthCheckup= async() =>{
     for(const[serverId, serverUrl] of Object.entries(serverMap)){
         const health = await checkHealth(serverUrl)
         serverHealth[serverId] = health
+        console.log(`Server checkup done for this ${serverId} and response is ${serverHealth[serverId]}`)
+        if(serverHealth[serverId] == false){
+            failCount(serverId)
+        }
     }
 }
 
@@ -60,3 +67,22 @@ async function checkHealth(serverUrl:string): Promise<boolean> {
         return false
     }
 }
+for(const serverId in serverMap){
+    failureCount[serverId]= 0
+}
+function failCount(serverId:string){
+    if (failureCount[serverId]!==undefined){
+        failureCount[serverId] += 1
+    }
+    else {
+        failureCount[serverId] = 1
+    }
+}
+function handlingFailedServer(serverId:string){
+    for(const[serverId, count] of Object.entries(failureCount)){
+        if (count == 5){
+            removeServerId(serverId)
+        }
+    }
+}
+setInterval(handlingFailedServer,10000)

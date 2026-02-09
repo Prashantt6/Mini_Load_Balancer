@@ -26,6 +26,11 @@ class ConsistentHashRing {
         }
         return this.ring.get(this.sortedKeys[0])!;
     }
+    removeServer(serverId:string){
+        const h = hash(serverId)
+        this.ring.delete(h)
+        this.sortedKeys = this.sortedKeys.filter(k => k !==h)
+    }
 }
 const ring = new ConsistentHashRing()
 export function addServerId(serverId: string){
@@ -40,3 +45,6 @@ export function getServerId(key: string): string{
     return ServerId;
 }
 
+export function removeServerId(serverId: string){
+    ring.removeServer(serverId)
+}
