@@ -4,6 +4,7 @@ import axios from 'axios'
 import { getServerId } from './lb-algorithm/consistentHashing'
 import { addServerId } from './lb-algorithm/consistentHashing'
 import { removeServerId } from './lb-algorithm/consistentHashing'
+import { stringify } from 'querystring'
 
 
 const app = express()
@@ -16,6 +17,7 @@ const serverMap: Record<string, string> ={
 }
 const serverHealth: Record<string, boolean> ={}
 const failureCount: Record<string, number> = {}
+const removedServer: Record<string,string> ={}
 app.use(express.json())
 
 function addServer() {
@@ -30,7 +32,7 @@ app.use((req,res) =>{
     const serverId = getServerId(key)
     console.log("Routing to:", serverId, serverMap[serverId]);
 
-    if (!serverHealth[serverId]) {
+    if (serverHealth[serverId] === false) {
         return res.status(503).send('Service unavailable')
     }
 
@@ -88,8 +90,24 @@ function handlingFailedServer(){
         if (count >= 5){
             console.log(`Removing ${serverId} due to repeated failures`)
             removeServerId(serverId)
+            removedServer[serverId] = serverMap[serverId]
             delete failureCount[serverId]
             delete serverHealth[serverId]
         }
     }
 }
+async function retryRemovedServer() {
+    for(const serverId in removedServer){
+        const  health = await checkHealth(serverId)
+        if(!health) continue
+
+        const server = serverId
+        // console.log(`Retrying adding ${serverId} after 10 minutes`)
+        addServerId(server)
+        serverHealth[serverId] = true
+        failureCount[serverId] = 0
+
+        delete removedServer[serverId]
+    }
+}
+setInterval(retryRemovedServer, 100000)
